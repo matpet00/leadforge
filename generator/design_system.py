@@ -119,14 +119,36 @@ FONTS = {
 def get_design(lead) -> dict:
     import random
     import hashlib
+    from generator.style_rules import constrain, INDUSTRY_TEMPLATES_STRICT
     seed = int(hashlib.sha256(
         f"{lead['ico']}:{lead['company_name']}".encode()).hexdigest()[:8], 16)
     rng = random.Random(seed)
-    tpl = pick_template(lead)
+
+    # pick template from industry-appropriate set only
+    allowed = INDUSTRY_TEMPLATES_STRICT.get(lead["industry"], TEMPLATES)
+    tpl = allowed[seed % len(allowed)]
+
     gf, stack = FONTS[tpl]
+    palette = constrain(lead, tpl, PALETTES[tpl]["_"])
+
+    # hue-jitter the accent so same-industry sites don't look identical
+    # (rotate lightness/hue slightly within the industry's color family)
+    def jitter(hex_color: str, amount: int) -> str:
+        h = hex_color.lstrip("#")
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        delta = rng.randint(-amount, amount)
+        r = max(0, min(255, r + delta))
+        g = max(0, min(255, g + delta // 2))
+        b = max(0, min(255, b - delta // 2))
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    if "accent" in palette:
+        palette = dict(palette)
+        palette["accent"] = jitter(palette["accent"], 18)
+
     return {
         "template": tpl,
-        "palette": PALETTES[tpl]["_"],
+        "palette": palette,
         "google_font": gf.replace("|", "&family="),
         "font_stack": stack,
         "photo_seed": seed % 3,

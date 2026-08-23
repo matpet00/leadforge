@@ -229,8 +229,11 @@ text-decoration:none;font-weight:800;text-transform:uppercase;letter-spacing:.04
 border:2px solid var(--accent);transition:all .2s}}
 .btn:hover{{background:transparent;color:var(--accent)}}
 .kicker{{letter-spacing:.18em}}
-.services{{padding:92px 0;background:var(--bg1)}}
-.card{{border-radius:4px;border:1px solid #3f3f46;background:var(--bg0)}}
+.services{{padding:92px 0;background:
+repeating-linear-gradient(45deg,var(--bg1) 0 14px,color-mix(in srgb,#000 22%,var(--bg1)) 14px 15px)}}
+.card{{border-radius:4px;border:2px solid #3f3f46;background:var(--bg0);position:relative}}
+.card::before{{content:'';position:absolute;top:8px;right:8px;width:6px;height:6px;
+border-radius:50%;background:var(--accent);box-shadow:0 12px 0 var(--accent),0 -12px 0 var(--accent)}}
 .card:hover{{border-color:var(--accent);transform:translateY(-3px)}}
 .card .cicon{{border-radius:4px}}
 .about{{background:var(--bg0);border-top:3px solid var(--accent);padding:90px 0}}
@@ -374,8 +377,11 @@ linear-gradient(100deg,var(--bg0) 42%,rgba(26,14,12,.72) 100%),url('{{{{ photo }
 .btn{{display:inline-flex;background:var(--accent);color:#fff;padding:16px 40px;border-radius:8px;
 text-decoration:none;font-weight:800;transition:all .25s}}
 .btn:hover{{background:#dc2626;transform:translateY(-2px);box-shadow:0 10px 30px rgba(239,68,68,.35)}}
-.services{{padding:92px 0;background:var(--bg1)}}
-.card{{background:var(--bg0);border:1px solid #3f2723;border-radius:12px}}
+.services{{padding:92px 0;background:
+radial-gradient(700px 300px at 50% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent),var(--bg1)}}
+.card{{background:linear-gradient(160deg,var(--bg0),color-mix(in srgb,var(--accent) 7%,var(--bg0)));
+border:1px solid #4a2c26;border-radius:18px}}
+.card:hover{{box-shadow:0 10px 40px color-mix(in srgb,var(--accent) 25%,transparent)}}
 .card:hover{{border-color:var(--accent)}}
 .about{{background:var(--bg0);padding:90px 0;border-left:4px solid var(--accent)}}
 .contact{{background:var(--bg1);padding:90px 0}}
