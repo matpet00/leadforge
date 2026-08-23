@@ -65,11 +65,12 @@ def scorer_check():
             return dict.__getitem__(self, k)
 
     good = L({"industry": "auto", "business_scope": "opravy automobilů; prodej",
-              "city": "Brno"})
+              "company_name": "Autoservis Dobra", "city": "Brno"})
     s, reasons = score_lead(good)
     assert s >= 40, f"good lead scored {s}"
     bad = L({"industry": "other",
-             "business_scope": "pronájem nemovitostí", "city": ""})
+             "business_scope": "pronájem nemovitostí",
+             "company_name": "Holding Invest", "city": ""})
     s2, _ = score_lead(bad)
     assert s2 < 30, f"bad lead scored {s2}"
     # determinism
