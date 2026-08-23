@@ -93,18 +93,18 @@ SHELL = """<!DOCTYPE html>
 </div></section>
 
 {% if testimonials %}
-<section id="reference" class="testimonials"><div class="wrap">
+<section id="prednosti" class="testimonials"><div class="wrap">
   <div class="kicker reveal">{{ testi_kicker }}</div>
-  <h2 class="reveal">Co o nás říkají</h2>
+  <h2 class="reveal">{{ testi_title }}</h2>
   <div class="testi-grid">
     {% for t in testimonials %}
     <blockquote class="tcard reveal">
-      <div class="stars" aria-hidden="true">★★★★★</div>
-      <p>„{{ t.text }}"</p>
-      <footer>— {{ t.author }}</footer>
+      <div class="ticon" aria-hidden="true">{{ t.icon }}</div>
+      <p>{{ t.text }}</p>
     </blockquote>
     {% endfor %}
   </div>
+  <p class="testi-note reveal">{{ testi_note }}</p>
 </div></section>
 {% endif %}
 
@@ -229,12 +229,12 @@ transition:transform .3s,filter .3s;filter:saturate(.92)}
 .stat span{color:var(--muted);font-size:.88rem}
 /* testimonials */
 .testimonials{background:var(--bg1,var(--soft,#f5f7fa))}
-.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
-.tcard{background:var(--cardbg,#fff);border-radius:var(--radius,14px);padding:26px;
-border-left:4px solid var(--accent);box-shadow:0 4px 16px rgba(16,24,40,.06)}
-.tcard .stars{color:#f59e0b;letter-spacing:3px;margin-bottom:10px;font-size:.95rem}
-.tcard p{font-style:italic;color:var(--text);margin-bottom:12px}
-.tcard footer{font-size:.86rem;color:var(--muted)}
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.tcard{background:var(--cardbg,#fff);border-radius:var(--radius,14px);padding:28px 24px;
+border-top:3px solid var(--accent);box-shadow:0 4px 16px rgba(16,24,40,.06)}
+.ticon{font-size:1.8rem;margin-bottom:12px}
+.tcard p{color:var(--text)}
+.testi-note{margin-top:24px;color:var(--muted);font-size:.9rem;text-align:center}
 /* industry ambient decorations (floating leaves / gears / bubbles...) */
 .ambient{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
 .ambient span{position:absolute;display:block;opacity:.5;animation:floaty 14s ease-in-out infinite}

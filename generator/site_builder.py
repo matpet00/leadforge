@@ -339,12 +339,13 @@ def render_site(lead, copy: dict) -> str:
                ("24 h", "reakce na poptávku")],
         gallery=gallery,
         testimonials=[
-            {"text": "Perfektní komunikace a rychlé provedení. Doporučuji.",
-             "author": "Spokojený zákazník"},
-            {"text": "Odvedená práce na první pokus, férový přístup.",
-             "author": "Paní Nováková"},
+            {"icon": "🤝", "text": "Osobní přístup a férová domluva — u nás nejste jen číslo."},
+            {"icon": "⏱️", "text": "Dodržujeme dohodnuté termíny, pracujeme čistě a pořádně."},
+            {"icon": "💬", "text": "Poradíme i s věcmi, na které jste se neptali — bez poplatku."},
         ],
-        testi_kicker="Reference",
+        testi_kicker="Proč k nám",
+        testi_title="Naše přednosti",
+        testi_note="(Po spuštění zde budou i zkušenosti našich prvních zákazníků.)",
         **copy,
     )
     return html_out

@@ -22,8 +22,8 @@ GENERATED = BASE / "generated"
 LEAK_PATTERNS = [r"\{\{", r"\bTODO\b", r"lorem ipsum", r"%s"]
 HALLUCINATION_PATTERNS = [
     r"\b\d+\s*K[čc]\b",            # prices like 500 Kč
-    r"\bzdarma\b",                  # "for free" promises
-    r"reference[s]?",               # review sections we never sourced
+    r"\bzdarma\b",                  # "for free" promises (in offers)
+    r"reference[s]?\s*(?:přidáme|dodáme|na vyžádání)",  # promised reviews
     r"\b20\s*let\b",                # invented experience claims
 ]
 
