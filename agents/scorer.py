@@ -24,7 +24,9 @@ NEGATIVE_INDUSTRIES = ["velkoobchod", "velkoobchodní", "činnost fondu", "pron�
 def score_lead(lead) -> tuple[int, list[str]]:
     reasons = []
     score = 0
-    scope = lead["business_scope"].lower()
+    # ARES live mode: business_scope holds the company name (no trade
+    # descriptions from search endpoint), so score on name + industry too.
+    scope = (lead["business_scope"] + " " + lead["company_name"]).lower()
 
     if lead["industry"] != "other":
         score += 30
@@ -44,6 +46,16 @@ def score_lead(lead) -> tuple[int, list[str]]:
         if w in scope:
             score -= 25
             reasons.append(f"negative signal '{w}' (-25)")
+    # ARES bonus: company name itself contains the trade keyword — strong
+    # specialization signal (e.g. "Autoservis Král", "Zahradnické služby")
+    for key in ["autoservis", "autolakovna", "pneuservis", "zahradnic",
+                "zahradní", "stavebn", "tesař", "malíř", "instalatér",
+                "kadeřnic", "kosmetic", "masáž", "restaurac", "hospod",
+                "catering"]:
+        if key in scope:
+            score += 15
+            reasons.append(f"name specializes '{key}' (+15)")
+            break
     return max(0, min(100, score)), reasons
 
 
