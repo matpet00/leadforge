@@ -1,0 +1,6 @@
+.env
+__pycache__/
+data/tg_offset
+*.db
+dashboard/
+generated/

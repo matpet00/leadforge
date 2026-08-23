@@ -1,0 +1,47 @@
+{
+  "12345678": {
+    "company_name": "Stavebniny a stavby Novák s.r.o.",
+    "obchodni_jmeno": "Stavebniny a stavby Novák s.r.o.",
+    "adresa": "Náměstí Míru 12, 568 02 Svitavy",
+    "ico": "12345678",
+    "zivnosti": [
+      {"popis": "Provádění staveb, včetně jejich změn, udržovacích prací na nich a jejich odstraňování"},
+      {"popis": "Malírské a natěřačské práce"}
+    ]
+  },
+  "23456789": {
+    "company_name": "Zahrady Petrov",
+    "adresa": "Zahradní 5, 616 00 Brno",
+    "ico": "23456789",
+    "zivnosti": [
+      {"popis": "Zahradnické služby a úpravy zeleně"},
+      {"popis": "Výroba a instalace plotů a oplocení"}
+    ]
+  },
+  "34567890": {
+    "company_name": "AutoServis Král",
+    "adresa": "Průmyslová 22, 370 01 České Budějovice",
+    "ico": "34567890",
+    "zivnosti": [
+      {"popis": "Opravy silničních vozidel"},
+      {"popis": "Pneuservis a vyvážení kol"}
+    ]
+  },
+  "45678901": {
+    "company_name": "Kadeřnictví Jana",
+    "adresa": "Komenského 3, 779 00 Olomouc",
+    "ico": "45678901",
+    "zivnosti": [
+      {"popis": "Kadeřnictví, bižuterství a kosmetické služby"}
+    ]
+  },
+  "56789012": {
+    "company_name": "Holding Moravia Invest a.s.",
+    "adresa": "Moravská 40, 110 00 Praha 1",
+    "ico": "56789012",
+    "zivnosti": [
+      {"popis": "Činnost fondů a obdobné finanční činnosti"},
+      {"popis": "Pronájem nemovitostí"}
+    ]
+  }
+}
