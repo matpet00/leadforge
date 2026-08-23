@@ -17,6 +17,7 @@ from pathlib import Path
 
 from core.db import connect, leads_in_stage, advance
 from core.config import llm_chat
+from jinja2 import Environment
 
 BASE = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = BASE / "templates"
@@ -217,107 +218,108 @@ if('IntersectionObserver' in window){
 
 
 def render_site(lead, copy: dict) -> str:
-    from generator.variants import pick_variant
-    v = pick_variant(lead)
-    from jinja2 import Environment
+    """Render a site using one of 15 distinct design personalities."""
+    from generator.design_system import get_design
+    from generator.template_css import TEMPLATE_CSS
+    from generator.shell import SHELL, maps_embed, BASE_CSS
+    from generator.variants import HERO_PHOTOS
+    import random as _r
+
+    d = get_design(lead)
+    tpl = d["template"]
+    p = d["palette"]
     seo = seo_block(lead, copy)
     import time as _t
     phone_raw = (lead["phone"] or "+420****0000").replace(" ", "")
 
-    palette = v["palette"]
-    google_font, font_stack = v["font"]
-    photo = v.get("hero_photo")
+    # hero photo for the industry
+    ids = HERO_PHOTOS.get(lead["industry"])
+    photo = None
+    if ids:
+        pid = ids[d["photo_seed"]]
+        photo = f"https://images.unsplash.com/{pid}?auto=format&fit=crop&w=1600&q=70"
 
-    # ---- layout-specific hero markup & css ----
-    env = Environment()
-    if v["layout"] == "split" and photo:
-        hero_css = """
-.hero{padding:0;display:grid;grid-template-columns:1.1fr 1fr;min-height:88vh;align-items:center}
-.hero .wrap{padding:96px 48px}
-.hero-photo{height:100%;min-height:420px;background-size:cover;background-position:center;
-clip-path:polygon(8% 0,100% 0,100% 100%,0 100%)}
-@media(max-width:860px){.hero{grid-template-columns:1fr}.hero-photo{min-height:260px;order:-1;clip-path:none}}
-.hero h1{font-size:clamp(2rem,4.5vw,3.4rem)}"""
-        hero_body = env.from_string(
-            f'<div class="hero-photo" role="img" aria-label="{lead["company_name"]}" '
-            f'style="background-image:url(\'{photo}\')"></div>'
-            '<div class="wrap"><span class="badge">{{ hero_label }}</span>'
-            '<h1>{{ headline }}</h1><p>{{ subhead }}</p>'
-            '<a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div>'
-        ).render(company=lead["company_name"],
-                 hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
-                 headline=copy["headline"], subhead=copy["subhead"],
-                 cta=copy["cta"], phone=phone_raw)
-        nav_dark = "false"
-    elif v["layout"] == "overlay" and photo:
-        hero_css = f"""
-.hero{{position:relative;padding:160px 0 120px;color:#fff;
-background:linear-gradient(rgba(15,23,42,.72),rgba(15,23,42,.85)),url('{photo}') center/cover}}
-.hero :is(h1,p){{color:#fff}} .hero p{{opacity:.85}}
-.hero .badge{{color:#fff;border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.12)}}
-.hero h1{{font-size:clamp(2.2rem,5vw,3.6rem)}}
-.hero .btn{{box-shadow:0 4px 24px rgba(0,0,0,.35)}}"""
-        hero_body = env.from_string(
-            '<div class="wrap" style="text-align:center;max-width:760px">'
-            '<span class="badge">{{ hero_label }}</span>'
-            '<h1>{{ headline }}</h1><p>{{ subhead }}</p>'
-            '<a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div>'
-        ).render(hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
-                 headline=copy["headline"], subhead=copy["subhead"],
-                 cta=copy["cta"], phone=phone_raw)
-        nav_dark = "true"
-    else:  # centered / fallback
-        grad = f"radial-gradient(1100px 420px at {('70% -10%' if v['decor']!='diagonal' else '20% 120%')},color-mix(in srgb,{palette['accent']} 18%,transparent),transparent),{palette['soft']}"
-        hero_css = f"""
-.hero{{padding:120px 0 96px;background:{grad};text-align:center}}
-.hero h1{{margin-inline:auto}} .hero p{{margin-inline:auto}}
-.hero h1{{font-size:clamp(2rem,5vw,3.3rem)}}"""
-        hero_body = env.from_string(
-            '<div class="wrap"><span class="badge">{{ hero_label }}</span>'
-            '<h1>{{ headline }}</h1><p>{{ subhead }}</p>'
-            '<a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div>'
-        ).render(hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
-                 headline=copy["headline"], subhead=copy["subhead"],
-                 cta=copy["cta"], phone=phone_raw)
-        nav_dark = "false"
+    # logo: first meaningful word + accent dot
+    words = [w for w in re.split(r"[\s—-]+", lead["company_name"]) if len(w) > 2]
+    logo_text = words[0] if words else lead["company_name"]
 
-    # ---- decorative flourishes ----
-    decor_css = {
-        "blobs": f".hero::before{{content:'';position:absolute;width:420px;height:420px;border-radius:50%;"
-                 f"background:radial-gradient(circle,color-mix(in srgb,{palette['accent']} 22%,transparent),transparent 70%);"
-                 f"filter:blur(40px);top:-80px;right:-80px;pointer-events:none}}",
-        "gridlines": f".about{{background-image:linear-gradient(color-mix(in srgb,{palette['accent']} 6%,transparent) 1px,transparent 1px),"
-                     f"linear-gradient(90deg,color-mix(in srgb,{palette['accent']} 6%,transparent) 1px,transparent 1px);"
-                     f"background-size:44px 44px}}",
-        "waves": f".cta-band{{border-radius:28px 28px 90px 28px}} footer{{border-top:2px solid color-mix(in srgb,{palette['accent']} 30%,transparent)}}",
-        "diagonal": f"section#sluzby{{background:linear-gradient(135deg,#fff 75%,color-mix(in srgb,{palette['accent']} 7%,transparent) 75%)}}",
-    }[v["decor"]]
+    # industry-specific section titles
+    ind = lead["industry"]
+    kickers = {
+        "tradesman": ("Naše práce", "Co pro vás uděláme", "Podíváme se, poradíme a uděláme pořádně."),
+        "salon": ("Služby salonu", "Jak vám pomůžeme", "U nás si odpočinete a odejdete spokojení."),
+        "auto": ("Servisní služby", "Vaše auto v našich rukou", "Diagnostika, oprava i prevence — vše pod jednou střechou."),
+        "gastronomy": ("Nabídka", "Co u nás ochutnáte", "Čerstvé suroviny, poctivá příprava, férové ceny."),
+        "health": ("Naše péče", "Jak funguje návštěva", "Individuální přístup a dostatek času jen pro vás."),
+        "sport": ("Trénink a aktivity", "Co u vás najdu", "Pro začátečníky i pokročilé — přijďte to zkusit."),
+    }
+    sk, st, card_text = kickers.get(ind, ("Naše služby", "Co pro vás uděláme",
+                                           "Rádi vám poradí a vše zajistíme."))
 
-    # ---- card treatment ----
-    card_css = {
-        "elevated": ".card{border:none;box-shadow:0 10px 30px rgba(16,24,40,.08)}",
-        "bordered": f".card{{box-shadow:none;border-top:3px solid {palette['accent']}}}",
-        "filled": f".card{{background:color-mix(in srgb,{palette['accent']} 5%,white);border-color:transparent}}",
-    }[v["cards"]]
+    # template CSS with palette substituted
+    tpl_css = TEMPLATE_CSS[tpl](p)
+    # inject remaining shell vars that templates expect as --cardbg etc.
+    dark_tpls = {"aurora", "monolith", "forge", "noir", "ember", "summit"}
+    is_dark = tpl in dark_tpls
+    extra_vars = f"""
+:root{{--cardbg:{p['bg1'] if is_dark else '#ffffff'};
+--cardline:{'#2a2a35' if is_dark else '#eef0f3'};
+--iconbg:{'color-mix(in srgb,var(--accent) 14%,transparent)'};
+--navbg:{p['bg0']}f5;--navline:{'#2a2a35' if is_dark else '#e8e8ec'};
+--logo:{'#ffffff' if is_dark else p['text']};--radius:14px;
+--font:{d['font_stack']};--tprop:border-color}}
+"""
+    tpl_css = extra_vars + tpl_css
 
-    html_out = Environment().from_string(PAGE_SHELL).render(
+    # hero body per template family (photo-heavy vs typographic)
+    if tpl in {"pulse", "noir", "aurora", "summit"} and not photo:
+        photo = None  # these work fine without photo too
+
+    if photo:
+        hero_html = (
+            '<div class="wrap">'
+            f'<span class="badge">{INDUSTRY_THEMES.get(ind, INDUSTRY_THEMES["other"])["hero_label"]}</span>'
+            f'<h1>{copy["headline"]}</h1>'
+            f'<p>{copy["subhead"]}</p>'
+            f'<a class="btn" href="tel:{phone_raw}">📞 {copy["cta"]}</a>'
+            '</div>')
+        # ensure the photo shows behind: templates style .hero background themselves
+        # via {{photo}} placeholder inside their css; replace it now
+        tpl_css = tpl_css.replace("{{ photo }}", photo)
+    else:
+        hero_html = (
+            '<div class="wrap">'
+            f'<span class="badge">{INDUSTRY_THEMES.get(ind, INDUSTRY_THEMES["other"])["hero_label"]}</span>'
+            f'<h1>{copy["headline"]}</h1>'
+            f'<p>{copy["subhead"]}</p>'
+            f'<a class="btn" href="tel:{phone_raw}">📞 {copy["cta"]}</a>'
+            '</div>')
+
+    html_out = Environment().from_string(SHELL).render(
         company=lead["company_name"],
+        logo_text=logo_text,
+        logo_dot=".",
         city=lead["city"],
+        ico=lead["ico"],
+        address=lead["address"],
         phone=phone_raw,
         phone_display=lead["phone"] or phone_raw,
+        email=lead["email"],
         year=_t.strftime("%Y"),
         seo_block=seo,
-        accent=palette["accent"],
-        dark=palette["dark"],
-        soft=palette["soft"],
-        hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
-        google_font=google_font,
-        font_stack=font_stack,
-        hero_css=hero_css,
-        hero_body=hero_body,
-        nav_dark=nav_dark,
-        decor_css=decor_css,
-        card_css=card_css,
+        google_font=d["google_font"],
+        base_css=BASE_CSS,
+        tpl_css=tpl_css,
+        hero_html=hero_html,
+        services_kicker=sk,
+        services_title=st,
+        card_text=card_text,
+        cicon='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>',
+        about_kicker="O nás",
+        hours="Po–Pá dle domluvy · So–Ne zavřeno",
+        cta_note="Nezávazně se ozvěte — rádi vám poradíme a vypočítáme termín.",
+        map_title=f"Najdete nás v {lead['city'] or 'Česku'}",
+        maps_embed=maps_embed(lead["city"], lead["company_name"]),
         **copy,
     )
     return html_out
