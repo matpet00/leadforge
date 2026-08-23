@@ -29,10 +29,18 @@ _last_call = [0.0]
 # search terms that surface businesses in our good industries
 SEARCH_TERMS = {
     "tradesman": ["strojírenské služby", "zahradnické", "stavební práce",
-                  "tesařství", "malířské práce", "instalatér"],
-    "salon": ["kadeřnictví", "kosmetický salón", "masáže"],
-    "auto": ["autoservis", "pneuservis", "autolakovna"],
-    "gastronomy": ["restaurace", "hospoda", "catering"],
+                  "tesařství", "malířské práce", "instalatér",
+                  "zednictví", "pokrývačství", "truhlářství"],
+    "salon": ["kadeřnictví", "kosmetický salón", "masáže", "nehty",
+              "barbershop"],
+    "auto": ["autoservis", "pneuservis", "autolakovna", "autolěkárna",
+             "vulkanizace"],
+    "gastronomy": ["restaurace", "hospoda", "catering", "cukrárna",
+                   "pizzeria"],
+    "health": ["fyzioterapie", "rehabilitace", "nutní terapeut",
+               "optometrie", "psycholog"],
+    "sport": ["fitness", "squash", "tenisový klub", "fotbalový klub",
+              "lezecká stěna", "jóga"],
 }
 
 

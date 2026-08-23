@@ -26,6 +26,8 @@ INDUSTRY_THEMES = {
     "salon":      {"accent": "#be185d", "hero_label": "Salon krásy"},
     "auto":       {"accent": "#1d4ed8", "hero_label": "Autoservis"},
     "gastronomy": {"accent": "#15803d", "hero_label": "Restaurace"},
+    "health":     {"accent": "#0e7490", "hero_label": "Zdraví a pohoda"},
+    "sport":      {"accent": "#b45309", "hero_label": "Sport a fitness"},
     "other":      {"accent": "#334155", "hero_label": "Naše služby"},
 }
 
@@ -124,13 +126,19 @@ html{scroll-behavior:smooth}
 body{font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);line-height:1.65;font-size:16px}
 .wrap{max-width:1100px;margin:0 auto;padding:0 24px}
 nav{position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
-border-bottom:1px solid #eef0f3;z-index:10}
+border-bottom:1px solid #eef0f3;z-index:10;transition:box-shadow .25s}
+nav.scrolled{box-shadow:0 2px 14px rgba(16,24,40,.08)}
 nav .wrap{display:flex;justify-content:space-between;align-items:center;height:64px}
-.logo{font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--ink)}
+.logo{font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--ink);transition:color .15s}
+.logo:hover{color:var(--accent)}
 .nav-links{display:flex;gap:28px;list-style:none}
-.nav-links a{text-decoration:none;color:var(--muted);font-size:.92rem;font-weight:500}
+.nav-links a{text-decoration:none;color:var(--muted);font-size:.92rem;font-weight:500;position:relative;padding:4px 0}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--accent);transition:width .25s;border-radius:2px}
 .nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after{width:100%}
 @media(max-width:640px){.nav-links{display:none}}
+.menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px}
+@media(max-width:640px){.menu-btn{display:block}.nav-links.mobile{display:flex;flex-direction:column;position:absolute;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid #eef0f3;padding:16px 24px;gap:14px}}
 .hero{padding:104px 0 88px;background:
 radial-gradient(1200px 400px at 70% -10%,color-mix(in srgb,var(--accent) 14%,transparent),transparent),var(--soft)}
 .hero .badge{display:inline-block;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
@@ -149,11 +157,17 @@ color:var(--accent);margin-bottom:10px}
 h2{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.01em;margin-bottom:36px;max-width:24ch}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
 .card{background:#fff;border:1px solid #eef0f3;border-radius:14px;padding:26px;
-box-shadow:0 2px 8px rgba(16,24,40,.04)}
+box-shadow:0 2px 8px rgba(16,24,40,.04);transition:transform .2s,box-shadow .2s,border-color .2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(16,24,40,.09);border-color:color-mix(in srgb,var(--accent) 25%,#eef0f3)}
+.card .icon{width:44px;height:44px;border-radius:11px;background:color-mix(in srgb,var(--accent) 10%,white);
+display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:16px}
 .card h3{font-size:1.06rem;margin-bottom:8px}
 .card p{color:var(--muted);font-size:.95rem}
 .about{background:var(--soft)}
 .about p{max-width:70ch;color:#374151;font-size:1.04rem}
+.stats{display:flex;flex-wrap:wrap;gap:40px;margin-top:36px}
+.stat b{font-size:1.9rem;color:var(--accent);letter-spacing:-.02em;display:block}
+.stat span{color:var(--muted);font-size:.9rem}
 .cta-band{background:linear-gradient(135deg,var(--ink),#1f2937);color:#fff;border-radius:20px;
 padding:56px 40px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between}
 .cta-band h2{margin:0;color:#fff}
@@ -161,26 +175,44 @@ padding:56px 40px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justif
 .cta-band .btn{background:#fff;color:var(--ink);box-shadow:none}
 footer{border-top:1px solid #eef0f3;padding:36px 0;margin-top:24px}
 footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;color:var(--muted);font-size:.88rem}
+/* scroll reveal */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 </style>
 </head>
 <body>
-<nav><div class="wrap"><a class="logo" href="#top">{{ company }}</a>
-<ul class="nav-links"><li><a href="#sluzby">Služby</a></li><li><a href="#o-nas">O nás</a></li><li><a href="#kontakt">Kontakt</a></li></ul></div></nav>
+<nav id="nav"><div class="wrap"><a class="logo" href="#top">{{ company }}</a>
+<ul class="nav-links" id="navlinks"><li><a href="#sluzby">Služby</a></li><li><a href="#o-nas">O nás</a></li><li><a href="#kontakt">Kontakt</a></li></ul>
+<button class="menu-btn" aria-label="Otevřít menu" onclick="document.getElementById('navlinks').classList.toggle('mobile')">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button></div></nav>
 <header id="top" class="hero"><div class="wrap">
 <span class="badge">{{ hero_label }}</span>
 <h1>{{ headline }}</h1><p>{{ subhead }}</p>
 <a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div></header>
 <section id="sluzby"><div class="wrap">
-<div class="section-label">Služby</div><h2>Co pro vás uděláme</h2>
-<div class="grid">{% for s in services %}<div class="card"><h3>{{ s }}</h3><p>Rádi vám poradí a vše zajistíme — od posouzení po dokončení práce.</p></div>{% endfor %}</div>
+<div class="section-label reveal">Služby</div><h2 class="reveal">Co pro vás uděláme</h2>
+<div class="grid">{% for s in services %}<div class="card reveal">
+<div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+<h3>{{ s }}</h3><p>Rádi vám poradí a vše zajistíme — od posouzení po dokončení práce.</p></div>{% endfor %}</div>
 </div></section>
 <section id="o-nas" class="about"><div class="wrap">
-<div class="section-label">O nás</div><h2>{{ company }}</h2><p>{{ about }}</p></div></section>
+<div class="section-label reveal">O nás</div><h2 class="reveal">{{ company }}</h2><p class="reveal">{{ about }}</p></div></section>
 <section id="kontakt"><div class="wrap">
-<div class="cta-band"><div><h2>{{ cta }}</h2><p>Ozveme se vám rychle — zavolejte nebo nám napište.</p></div>
+<div class="cta-band reveal"><div><h2>{{ cta }}</h2><p>Ozveme se vám rychle — zavolejte nebo nám napište.</p></div>
 <a class="btn" href="tel:{{ phone }}">{{ phone_display }}</a></div>
 </div></section>
 <footer><div class="wrap"><span>&copy; {{ year }} {{ company }}</span><span>{{ city }}</span></div></footer>
+<script>
+// nav shadow on scroll
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>8),{passive:true});
+// scroll reveal
+if('IntersectionObserver' in window){
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+}else{document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'))}
+</script>
 </body></html>"""
 
 
