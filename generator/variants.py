@@ -100,6 +100,58 @@ HERO_PHOTOS = {
     ],
 }
 
+# Secondary photos for gallery/about sections — richer visual storytelling
+GALLERY_PHOTOS = {
+    "tradesman": [
+        "photo-1504328345606-18bbc8c9d7d1",  # tools
+        "photo-1530124566582-a618bc2615dc",  # workshop
+        "photo-1581244277943-fe4a9c777189",  # craftsman at work
+        "photo-1416879595882-3373a0480b5b",  # garden path
+        "photo-1466692476868-aef1dfb1e735",  # plants
+        "photo-1523348837708-15d4a09cfac2",  # hands planting
+    ],
+    "salon": [
+        "photo-1522336572468-97b06e8ef143",
+        "photo-1633681926022-84c23e8cb2d6",
+        "photo-1595476108010-b4d1f102b1b1",
+        "photo-1519415943484-9fa1873496d4",
+        "photo-1487412947147-5cebf100ffc2",
+        "photo-1516975080664-ed2fc6a32937",
+    ],
+    "auto": [
+        "photo-1487754180451-c456f719a1fc",
+        "photo-1503376780353-7e6692767b70",
+        "photo-1552519507-da3b142c6e3d",
+        "photo-1615906655593-ad0386982a0f",
+        "photo-1625047509168-a7026f36de04",
+        "photo-1632823471565-1ecdf5c6da05",
+    ],
+    "gastronomy": [
+        "photo-1504674900247-0877df9cc836",
+        "photo-1467003909585-2f8a72700288",
+        "photo-1540189549336-e6e99c3679fe",
+        "photo-1476224203421-9ac39bcb3327",
+        "photo-1414235077428-338989a2e8c0",
+        "photo-1551218808-94e220e084d2",
+    ],
+    "health": [
+        "photo-1571019613454-1cb2f99b2d8b",
+        "photo-1545205597-3d9d02c29597",
+        "photo-1552196563-55cd4e45efb3",
+        "photo-1599901860904-17e6ed7083a0",
+        "photo-1576091160550-2173dba999ef",
+        "photo-1538108149393-fbbd81895907",
+    ],
+    "sport": [
+        "photo-1461896836934-ffe607ba8211",
+        "photo-1571019614242-c5c5dee9f50b",
+        "photo-1540479859555-17af45c78602",
+        "photo-1517838277536-f5f99be501cd",
+        "photo-1526506118085-60ce8714f8c5",
+        "photo-1534438327276-14e5300c3a48",
+    ],
+}
+
 
 def hero_photo(industry: str, rng) -> str | None:
     """Pick a deterministic hero photo URL, None if industry unknown."""
@@ -108,6 +160,16 @@ def hero_photo(industry: str, rng) -> str | None:
         return None
     pid = rng.choice(ids)
     return f"https://images.unsplash.com/{pid}?auto=format&fit=crop&w=1600&q=70"
+
+
+def gallery_photos(industry: str, rng, n: int = 3) -> list[str]:
+    """Deterministic selection of gallery photos for an industry."""
+    ids = GALLERY_PHOTOS.get(industry, [])
+    if not ids:
+        return []
+    picks = rng.sample(ids, min(n, len(ids)))
+    return [f"https://images.unsplash.com/{pid}?auto=format&fit=crop&w=800&q=65"
+            for pid in picks]
 
 
 def pick_variant(lead) -> dict:

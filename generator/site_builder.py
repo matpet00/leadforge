@@ -222,8 +222,14 @@ def render_site(lead, copy: dict) -> str:
     from generator.design_system import get_design
     from generator.template_css import TEMPLATE_CSS
     from generator.shell import SHELL, maps_embed, BASE_CSS
-    from generator.variants import HERO_PHOTOS
+    from generator.variants import HERO_PHOTOS, gallery_photos
     import random as _r
+
+    # deterministic rng for this lead (same seed logic as design)
+    import hashlib
+    lseed = int(hashlib.sha256(
+        f"{lead['ico']}:{lead['company_name']}".encode()).hexdigest()[:8], 16)
+    lrng = _r.Random(lseed)
 
     d = get_design(lead)
     tpl = d["template"]
@@ -238,6 +244,7 @@ def render_site(lead, copy: dict) -> str:
     if ids:
         pid = ids[d["photo_seed"]]
         photo = f"https://images.unsplash.com/{pid}?auto=format&fit=crop&w=1600&q=70"
+    gallery = gallery_photos(lead["industry"], lrng, n=3)
 
     # logo: first meaningful word + accent dot
     words = [w for w in re.split(r"[\s—-]+", lead["company_name"]) if len(w) > 2]
@@ -255,6 +262,12 @@ def render_site(lead, copy: dict) -> str:
     }
     sk, st, card_text = kickers.get(ind, ("Naše služby", "Co pro vás uděláme",
                                            "Rádi vám poradí a vše zajistíme."))
+
+    # ambient hero decorations per industry
+    ambient = {
+        "tradesman": "🍃", "salon": "✨", "auto": "⚙️",
+        "gastronomy": "🌿", "health": "💚", "sport": "⚡",
+    }.get(ind, "✦")
 
     # template CSS with palette substituted
     tpl_css = TEMPLATE_CSS[tpl](p)
@@ -314,12 +327,24 @@ def render_site(lead, copy: dict) -> str:
         services_kicker=sk,
         services_title=st,
         card_text=card_text,
+        ambient_emoji=ambient,
         cicon='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>',
         about_kicker="O nás",
         hours="Po–Pá dle domluvy · So–Ne zavřeno",
         cta_note="Nezávazně se ozvěte — rádi vám poradíme a vypočítáme termín.",
         map_title=f"Najdete nás v {lead['city'] or 'Česku'}",
         maps_embed=maps_embed(lead["city"], lead["company_name"]),
+        # rich content
+        stats=[("10+", "let zkušeností"), ("100 %", "spokojenost"),
+               ("24 h", "reakce na poptávku")],
+        gallery=gallery,
+        testimonials=[
+            {"text": "Perfektní komunikace a rychlé provedení. Doporučuji.",
+             "author": "Spokojený zákazník"},
+            {"text": "Odvedená práce na první pokus, férový přístup.",
+             "author": "Paní Nováková"},
+        ],
+        testi_kicker="Reference",
         **copy,
     )
     return html_out

@@ -52,6 +52,11 @@ SHELL = """<!DOCTYPE html>
 </nav>
 
 <header id="top" class="hero">
+<div class="ambient" aria-hidden="true">
+  <span>{{ ambient_emoji }}</span><span>{{ ambient_emoji }}</span>
+  <span>{{ ambient_emoji }}</span><span>{{ ambient_emoji }}</span>
+  <span>{{ ambient_emoji }}</span>
+</div>
 {{ hero_html }}
 </header>
 
@@ -74,8 +79,34 @@ SHELL = """<!DOCTYPE html>
   <div class="kicker reveal">{{ about_kicker }}</div>
   <h2 class="reveal">{{ company }}</h2>
   <p class="reveal lead-p">{{ about }}</p>
+  {% if stats %}
+  <div class="stats reveal">
+    {% for st in stats %}<div class="stat"><b>{{ st[0] }}</b><span>{{ st[1] }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
   {% if hours %}<p class="hours reveal"><strong>Otevírací doba:</strong> {{ hours }}</p>{% endif %}
+  {% if gallery %}
+  <div class="gallery">
+    {% for g in gallery %}<div class="gitem reveal" style="background-image:url('{{ g }}')" role="img" aria-label="Ukázka práce {{ loop.index }}"></div>{% endfor %}
+  </div>
+  {% endif %}
 </div></section>
+
+{% if testimonials %}
+<section id="reference" class="testimonials"><div class="wrap">
+  <div class="kicker reveal">{{ testi_kicker }}</div>
+  <h2 class="reveal">Co o nás říkají</h2>
+  <div class="testi-grid">
+    {% for t in testimonials %}
+    <blockquote class="tcard reveal">
+      <div class="stars" aria-hidden="true">★★★★★</div>
+      <p>„{{ t.text }}"</p>
+      <footer>— {{ t.author }}</footer>
+    </blockquote>
+    {% endfor %}
+  </div>
+</div></section>
+{% endif %}
 
 <section id="kontakt" class="contact"><div class="wrap">
   <div class="kicker reveal">Kontakt</div>
@@ -186,6 +217,39 @@ footer{border-top:1px solid var(--navline);padding:36px 0;margin-top:30px}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 .hours{margin-top:18px;color:var(--muted)}
 .hours strong{color:var(--text)}
+/* gallery */
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:36px}
+.gitem{height:190px;border-radius:var(--radius,14px);background-size:cover;background-position:center;
+transition:transform .3s,filter .3s;filter:saturate(.92)}
+.gitem:hover{transform:scale(1.025) rotate(-.4deg);filter:saturate(1.1)}
+@media(max-width:640px){.gitem{height:140px}}
+/* stats */
+.stats{display:flex;flex-wrap:wrap;gap:44px;margin-top:34px}
+.stat b{font-size:2.2rem;font-weight:800;color:var(--accent);letter-spacing:-.02em;display:block;line-height:1.1}
+.stat span{color:var(--muted);font-size:.88rem}
+/* testimonials */
+.testimonials{background:var(--bg1,var(--soft,#f5f7fa))}
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.tcard{background:var(--cardbg,#fff);border-radius:var(--radius,14px);padding:26px;
+border-left:4px solid var(--accent);box-shadow:0 4px 16px rgba(16,24,40,.06)}
+.tcard .stars{color:#f59e0b;letter-spacing:3px;margin-bottom:10px;font-size:.95rem}
+.tcard p{font-style:italic;color:var(--text);margin-bottom:12px}
+.tcard footer{font-size:.86rem;color:var(--muted)}
+/* industry ambient decorations (floating leaves / gears / bubbles...) */
+.ambient{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.ambient span{position:absolute;display:block;opacity:.5;animation:floaty 14s ease-in-out infinite}
+.ambient span:nth-child(1){left:8%;top:18%;animation-delay:0s;font-size:28px}
+.ambient span:nth-child(2){left:78%;top:12%;animation-delay:-4s;font-size:22px;animation-duration:17s}
+.ambient span:nth-child(3){left:62%;top:64%;animation-delay:-8s;font-size:26px;animation-duration:20s}
+.ambient span:nth-child(4){left:22%;top:70%;animation-delay:-2s;font-size:20px;animation-duration:15s}
+.ambient span:nth-child(5){left:88%;top:48%;animation-delay:-6s;font-size:24px;animation-duration:18s}
+@keyframes floaty{
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  25%{transform:translateY(-16px) rotate(8deg)}
+  50%{transform:translateY(-4px) rotate(-5deg)}
+  75%{transform:translateY(-14px) rotate(4deg)}
+}
+@media(prefers-reduced-motion:reduce){.ambient span{animation:none}}
 """
 
 
