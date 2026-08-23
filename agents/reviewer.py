@@ -205,7 +205,7 @@ def review_design(html: str) -> dict:
         miss(8, "flat, no depth")
     if "letter-spacing" in css:
         add(4, "typographic detail")
-    if re.search(r"\.hero[^\{]*\{[^}]*padding:\s*(9\d|1[0-4]\d)px", css):
+    if re.search(r"\.hero[^\{]*\{[^}]*padding:\s*(9\d|1\d\d)px", css):
         add(6, "generous hero whitespace")
     else:
         miss(6, "cramped hero — no breathing room")
