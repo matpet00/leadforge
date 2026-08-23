@@ -162,6 +162,87 @@ def css_block(html: str) -> str:
     return m.group(1) if m else ""
 
 
+def strip_html(html: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(
+        r"<[^>]+>", " ", re.sub(r"(?is)<(script|style).*?</\1>", " ", html)))
+
+
+def review_design(html: str) -> dict:
+    """Design-quality review: originality, visual hierarchy, creativity.
+    This is the subjective half the static checks above can't see."""
+    score = 0
+    issues, wins = [], []
+    css = css_block(html)
+
+    def add(pts, why):
+        nonlocal score
+        score += pts
+        wins.append(why)
+
+    def miss(pts, why):
+        nonlocal score
+        score -= pts
+        issues.append(why)
+
+    # --- uniqueness signals (template sameness is the enemy) ---
+    if "--accent" in css and css.count("#") >= 6:
+        add(8, "custom color system")
+    else:
+        miss(10, "barely-there color identity")
+    for pattern in ["gradient", "backdrop-filter", "clip-path", "blur(", "mix-blend"]:
+        if pattern in css:
+            add(6, f"modern CSS technique: {pattern}")
+    if "clamp(" in css:
+        add(5, "fluid typography (clamp)")
+    else:
+        miss(5, "static font sizes only")
+
+    # --- visual hierarchy & depth ---
+    depth_signals = sum(1 for p in ["box-shadow", "border-radius", "opacity"] if p in css)
+    if depth_signals >= 2:
+        add(depth_signals * 3, "depth & layering present")
+    else:
+        miss(8, "flat, no depth")
+    if "letter-spacing" in css:
+        add(4, "typographic detail")
+    if re.search(r"\.hero[^\{]*\{[^}]*padding:\s*(9\d|1[0-4]\d)px", css):
+        add(6, "generous hero whitespace")
+    else:
+        miss(6, "cramped hero — no breathing room")
+
+    # --- creativity / delight ---
+    creative = sum(1 for p in ["animation", "@keyframes", "transform:", "::before", "::after",
+                               "svg", "transition-delay", "nth-child"]
+                   if p in html.lower())
+    add(min(creative * 4, 20), f"{creative} creative elements")
+    if creative == 0:
+        miss(15, "zero decorative/creative elements — sterile")
+    if "svg" in html.lower():
+        add(5, "inline SVG artwork/icons")
+
+    # --- content personality ---
+    text = strip_html(html)
+    czech_specific = sum(1 for w in ["rádi", "rád", "můžete", "stačí", "klidně",
+                                     "domluvit", "poradit"] if w in text.lower())
+    if czech_specific >= 2:
+        add(6, "warm human copy tone")
+    else:
+        miss(6, "copy feels machine-generated")
+    if len(text) < 600:
+        miss(10, "too little content to feel real")
+    elif len(text) > 1200:
+        add(4, "rich content")
+
+    # --- anti-blandness checklist ---
+    same_as_default = all(x in css for x in ["max-width:1100px", "border-radius:14px",
+                                             "#f5f7fa"])
+    if same_as_default:
+        miss(12, "looks like default template — no customization")
+
+    return {"score": max(0, min(100, round(score))),
+            "issues": issues, "wins": wins}
+
+
 def run(fix: bool = False) -> dict:
     conn = connect()
     rows = conn.execute(
@@ -171,20 +252,31 @@ def run(fix: bool = False) -> dict:
 
     for r in rows:
         d = dict(r)
-        raw = (d["demo_url"] or "").replace("file://", "").strip("/")
-        slug = raw.split("/")[0] if "/" in raw else raw.replace("index.html", "").strip("/")
+        raw = (d["demo_url"] or "")
+        if raw.startswith("http"):
+            slug = raw.rstrip("/").split("/")[-1]
+            if not (GENERATED / slug / "index.html").exists():
+                slug = slug.removeprefix("demo-")
+        else:
+            raw = raw.replace("file://", "").strip("/")
+            slug = raw.split("/")[0] if "/" in raw else raw.replace("index.html", "").strip("/")
         path = GENERATED / slug / "index.html"
         if not path.exists():
             continue
         result = review_html(path.read_text(encoding="utf-8"))
+        design = review_design(path.read_text(encoding="utf-8"))
+        # combined score: technical 50% + design 50%
+        combined = round(result["score"] * 0.5 + design["score"] * 0.5)
+        result["combined"] = combined
         report["reviewed"] += 1
 
         # iteration counter from notes
         iters = len(re.findall(r"\[review", d.get("notes", "") or ""))
-        status = "PASS" if result["score"] >= THRESHOLD else (
+        status = "PASS" if combined >= THRESHOLD else (
             "FIX" if fix and iters < MAX_ITERATIONS else "ACCEPTED")
-        detail = (f"review={result['score']} {status}; "
-                  f"issues: {'; '.join(result['issues'][:3]) or 'none'}")
+        detail = (f"tech={result['score']} design={design['score']} "
+                  f"combined={combined} {status}; "
+                  f"issues: {'; '.join((result['issues'] + design['issues'])[:3]) or 'none'}")
         conn.execute(
             "UPDATE leads SET notes=COALESCE(notes,'')||? WHERE id=?",
             (f" [review:{result['score']}:{status}]", d["id"]))

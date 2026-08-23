@@ -217,23 +217,214 @@ if('IntersectionObserver' in window){
 
 
 def render_site(lead, copy: dict) -> str:
-    theme = INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])
+    from generator.variants import pick_variant
+    v = pick_variant(lead)
     from jinja2 import Environment
     seo = seo_block(lead, copy)
     import time as _t
-    phone_raw = (lead["phone"] or "+420000000000").replace(" ", "")
-    html_out = Environment().from_string(BASE_TEMPLATE).render(
+    phone_raw = (lead["phone"] or "+420****0000").replace(" ", "")
+
+    palette = v["palette"]
+    google_font, font_stack = v["font"]
+    photo = v.get("hero_photo")
+
+    # ---- layout-specific hero markup & css ----
+    env = Environment()
+    if v["layout"] == "split" and photo:
+        hero_css = """
+.hero{padding:0;display:grid;grid-template-columns:1.1fr 1fr;min-height:88vh;align-items:center}
+.hero .wrap{padding:96px 48px}
+.hero-photo{height:100%;min-height:420px;background-size:cover;background-position:center;
+clip-path:polygon(8% 0,100% 0,100% 100%,0 100%)}
+@media(max-width:860px){.hero{grid-template-columns:1fr}.hero-photo{min-height:260px;order:-1;clip-path:none}}
+.hero h1{font-size:clamp(2rem,4.5vw,3.4rem)}"""
+        hero_body = env.from_string(
+            f'<div class="hero-photo" role="img" aria-label="{lead["company_name"]}" '
+            f'style="background-image:url(\'{photo}\')"></div>'
+            '<div class="wrap"><span class="badge">{{ hero_label }}</span>'
+            '<h1>{{ headline }}</h1><p>{{ subhead }}</p>'
+            '<a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div>'
+        ).render(company=lead["company_name"],
+                 hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
+                 headline=copy["headline"], subhead=copy["subhead"],
+                 cta=copy["cta"], phone=phone_raw)
+        nav_dark = "false"
+    elif v["layout"] == "overlay" and photo:
+        hero_css = f"""
+.hero{{position:relative;padding:160px 0 120px;color:#fff;
+background:linear-gradient(rgba(15,23,42,.72),rgba(15,23,42,.85)),url('{photo}') center/cover}}
+.hero :is(h1,p){{color:#fff}} .hero p{{opacity:.85}}
+.hero .badge{{color:#fff;border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.12)}}
+.hero h1{{font-size:clamp(2.2rem,5vw,3.6rem)}}
+.hero .btn{{box-shadow:0 4px 24px rgba(0,0,0,.35)}}"""
+        hero_body = env.from_string(
+            '<div class="wrap" style="text-align:center;max-width:760px">'
+            '<span class="badge">{{ hero_label }}</span>'
+            '<h1>{{ headline }}</h1><p>{{ subhead }}</p>'
+            '<a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div>'
+        ).render(hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
+                 headline=copy["headline"], subhead=copy["subhead"],
+                 cta=copy["cta"], phone=phone_raw)
+        nav_dark = "true"
+    else:  # centered / fallback
+        grad = f"radial-gradient(1100px 420px at {('70% -10%' if v['decor']!='diagonal' else '20% 120%')},color-mix(in srgb,{palette['accent']} 18%,transparent),transparent),{palette['soft']}"
+        hero_css = f"""
+.hero{{padding:120px 0 96px;background:{grad};text-align:center}}
+.hero h1{{margin-inline:auto}} .hero p{{margin-inline:auto}}
+.hero h1{{font-size:clamp(2rem,5vw,3.3rem)}}"""
+        hero_body = env.from_string(
+            '<div class="wrap"><span class="badge">{{ hero_label }}</span>'
+            '<h1>{{ headline }}</h1><p>{{ subhead }}</p>'
+            '<a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div>'
+        ).render(hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
+                 headline=copy["headline"], subhead=copy["subhead"],
+                 cta=copy["cta"], phone=phone_raw)
+        nav_dark = "false"
+
+    # ---- decorative flourishes ----
+    decor_css = {
+        "blobs": f".hero::before{{content:'';position:absolute;width:420px;height:420px;border-radius:50%;"
+                 f"background:radial-gradient(circle,color-mix(in srgb,{palette['accent']} 22%,transparent),transparent 70%);"
+                 f"filter:blur(40px);top:-80px;right:-80px;pointer-events:none}}",
+        "gridlines": f".about{{background-image:linear-gradient(color-mix(in srgb,{palette['accent']} 6%,transparent) 1px,transparent 1px),"
+                     f"linear-gradient(90deg,color-mix(in srgb,{palette['accent']} 6%,transparent) 1px,transparent 1px);"
+                     f"background-size:44px 44px}}",
+        "waves": f".cta-band{{border-radius:28px 28px 90px 28px}} footer{{border-top:2px solid color-mix(in srgb,{palette['accent']} 30%,transparent)}}",
+        "diagonal": f"section#sluzby{{background:linear-gradient(135deg,#fff 75%,color-mix(in srgb,{palette['accent']} 7%,transparent) 75%)}}",
+    }[v["decor"]]
+
+    # ---- card treatment ----
+    card_css = {
+        "elevated": ".card{border:none;box-shadow:0 10px 30px rgba(16,24,40,.08)}",
+        "bordered": f".card{{box-shadow:none;border-top:3px solid {palette['accent']}}}",
+        "filled": f".card{{background:color-mix(in srgb,{palette['accent']} 5%,white);border-color:transparent}}",
+    }[v["cards"]]
+
+    html_out = Environment().from_string(PAGE_SHELL).render(
         company=lead["company_name"],
         city=lead["city"],
         phone=phone_raw,
         phone_display=lead["phone"] or phone_raw,
         year=_t.strftime("%Y"),
-        accent=theme["accent"],
-        hero_label=theme["hero_label"],
         seo_block=seo,
+        accent=palette["accent"],
+        dark=palette["dark"],
+        soft=palette["soft"],
+        hero_label=INDUSTRY_THEMES.get(lead["industry"], INDUSTRY_THEMES["other"])["hero_label"],
+        google_font=google_font,
+        font_stack=font_stack,
+        hero_css=hero_css,
+        hero_body=hero_body,
+        nav_dark=nav_dark,
+        decor_css=decor_css,
+        card_css=card_css,
         **copy,
     )
     return html_out
+
+
+PAGE_SHELL = """<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ company }}{% if city %} — {{ city }}{% endif %}</title>
+{{ seo_block }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family={{ google_font }}&display=swap" rel="stylesheet">
+<style>
+:root{--accent:{{ accent }};--dark:{{ dark }};--soft:{{ soft }};--ink:#111827;--muted:#6b7280}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{font-family:{{ font_stack }};color:var(--ink);line-height:1.65;font-size:16px}
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+nav{position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);
+background:{% if nav_dark == 'true' %}rgba(15,23,42,.55){% else %}rgba(255,255,255,.9){% endif %};
+border-bottom:1px solid rgba(148,163,184,.18);transition:box-shadow .25s}
+nav.scrolled{box-shadow:0 2px 14px rgba(16,24,40,.1)}
+{% if nav_dark == 'true' %}nav :is(a){color:#fff}{% endif %}
+nav .wrap{display:flex;justify-content:space-between;align-items:center;height:64px}
+.logo{font-weight:800;font-size:1.08rem;text-decoration:none;color:var(--ink);letter-spacing:-.02em}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:26px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--muted);font-size:.92rem;font-weight:600;position:relative;padding:4px 0}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--accent);transition:width .25s;border-radius:2px}
+.nav-links a:hover{color:var(--ink)}.nav-links a:hover::after{width:100%}
+@media(max-width:700px){.nav-links{display:none}.menu-btn{display:block!important}}
+.menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;color:var(--ink)}
+.hero{position:relative;overflow:hidden}
+.badge{display:inline-block;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
+background:color-mix(in srgb,var(--accent) 9%,white);padding:6px 15px;border-radius:99px;
+font-size:.76rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:22px}
+h1{line-height:1.1;letter-spacing:-.025em;margin-bottom:18px}
+.hero p{font-size:clamp(1.05rem,2vw,1.25rem);color:var(--muted);max-width:52ch;margin-bottom:32px}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#fff;
+padding:15px 32px;border-radius:12px;text-decoration:none;font-weight:700;font-size:1rem;
+transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s}
+.btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 45%,transparent)}
+.btn:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+section{padding:84px 0}
+.section-label{font-size:.78rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+h2{font-size:clamp(1.55rem,3vw,2.1rem);letter-spacing:-.015em;margin-bottom:40px;max-width:24ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px}
+.card{background:#fff;border:1px solid #eef0f3;border-radius:16px;padding:28px;
+transition:transform .25s,box-shadow .25s}
+.card:hover{transform:translateY(-4px)}
+.card .icon{width:46px;height:46px;border-radius:12px;background:color-mix(in srgb,var(--accent) 11%,white);
+display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:16px}
+.card h3{font-size:1.07rem;margin-bottom:8px}
+.card p{color:var(--muted);font-size:.94rem}
+.about{background:var(--soft)}
+.about p{max-width:68ch;color:#374151;font-size:1.05rem}
+.cta-band{background:linear-gradient(135deg,var(--dark),#1f2937);color:#fff;border-radius:22px;
+padding:58px 42px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between}
+.cta-band h2{margin:0;color:#fff}.cta-band p{opacity:.75;margin-top:6px}
+.cta-band .btn{background:#fff;color:var(--ink);box-shadow:none}
+footer{border-top:1px solid #eef0f3;padding:38px 0;margin-top:24px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;color:var(--muted);font-size:.88rem}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .65s ease,transform .65s ease}
+.reveal.in{opacity:1;transform:none}
+.reveal:nth-child(2){transition-delay:.08s}.reveal:nth-child(3){transition-delay:.16s}.reveal:nth-child(4){transition-delay:.24s}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+/* layout/decor/card variants injected per-site */
+{{ hero_css }}
+{{ decor_css | safe }}
+{{ card_css }}
+</style>
+</head>
+<body>
+<nav id="nav"><div class="wrap"><a class="logo" href="#top">{{ company.split(' ')[0] }}<span>.</span></a>
+<ul class="nav-links" id="navlinks"><li><a href="#sluzby">Služby</a></li><li><a href="#o-nas">O nás</a></li><li><a href="#kontakt">Kontakt</a></li></ul>
+<button class="menu-btn" aria-label="Otevřít menu" onclick="document.getElementById('navlinks').classList.toggle('mobile')">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button></div></nav>
+<header id="top" class="hero">
+{{ hero_body | safe }}
+</header>
+<main>
+<section id="sluzby"><div class="wrap">
+<div class="section-label reveal">Služby</div><h2 class="reveal">Co pro vás uděláme</h2>
+<div class="grid">{% for s in services %}<div class="card reveal">
+<div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+<h3>{{ s }}</h3><p>Rádi vám poradí a vše zajistíme — od posouzení po dokončení.</p></div>{% endfor %}</div>
+</div></section>
+<section id="o-nas" class="about"><div class="wrap">
+<div class="section-label reveal">O nás</div><h2 class="reveal">{{ company }}</h2><p class="reveal">{{ about }}</p></div></section>
+<section id="kontakt"><div class="wrap">
+<div class="cta-band reveal"><div><h2>{{ cta }}</h2><p>Ozveme se vám rychle — zavolejte nebo napište.</p></div>
+<a class="btn" href="tel:{{ phone }}">{{ phone_display }}</a></div>
+</div></section>
+</main>
+<footer><div class="wrap"><span>&copy; {{ year }} {{ company }}</span><span>{{ city }}</span></div></footer>
+<script>
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>8),{passive:true});
+if('IntersectionObserver' in window){
+ const io=new IntersectionObserver(es=>es.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('in'),i*60);io.unobserve(e.target)}}),{threshold:.12});
+ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+}else{document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'))}
+</script>
+</body></html>"""
 
 
 def run(use_llm: bool = False) -> dict:
