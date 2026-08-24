@@ -189,6 +189,28 @@ Vrať kompletní přepracované HTML."""
     if m.start() > 0:
         print(f"    [fixer: odstraneno {m.start()} znaku reasoning textu]")
         out = out[m.start():]
+    # strip reasoning text INJECTED INSIDE the document (between tags)
+    end = out.lower().rfind("</html>")
+    if end != -1:
+        tail = out[end + len("</html>"):]
+        if tail.strip() and not re.sub(r"^[^<]*", "", tail,
+                                       flags=re.DOTALL).strip():
+            print("    [fixer: odstranen text za </html>]")
+            out = out[:end + len("</html>")]
+    # detect prose paragraphs inside the body (reasoning leak)
+    body_m = re.search(r"<body[^>]*>(.*?)</body>", out, re.DOTALL | re.IGNORECASE)
+    if body_m:
+        body = body_m.group(1)
+        stripped = re.sub(r"<script.*?</script>|<!--.*?-->", "", body,
+                          flags=re.DOTALL)
+        visible = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", stripped)).strip()
+        if len(visible) < 200 and len(body) > 500:
+            raise ValueError(
+                f"fixer output looks broken: body={len(body)}B but only "
+                f"{len(visible)} chars of content — likely reasoning inside")
+        if re.search(r"(Actually|Looking more carefully|I need to output|"
+                     r"But the |Wait, )", visible):
+            raise ValueError("fixer leaked reasoning into the document body")
     return out
 
 
