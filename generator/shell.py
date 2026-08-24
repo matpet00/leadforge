@@ -114,16 +114,16 @@ SHELL = """<!DOCTYPE html>
   <div class="contact-grid">
     {% if phone_display != '+420****0000' %}
     <a class="ccard reveal" href="tel:{{ phone }}">
-      <span class="ci">📞</span><b>Telefon</b><span>{{ phone_display }}</span>
+      <span class="ci"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></span><b>Telefon</b><span>{{ phone_display }}</span>
     </a>
     {% endif %}
     {% if email %}
     <a class="ccard reveal" href="mailto:{{ email }}">
-      <span class="ci">✉️</span><b>E-mail</b><span>{{ email }}</span>
+      <span class="ci"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></span><b>E-mail</b><span>{{ email }}</span>
     </a>
     {% endif %}
     <div class="ccard reveal">
-      <span class="ci">📍</span><b>Sídlo</b><span>{{ address or city or 'Česká republika' }}</span>
+      <span class="ci"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/></svg></span><b>Sídlo</b><span>{{ address or city or 'Česká republika' }}</span>
     </div>
   </div>
   {% if cta_note %}<p class="cta-note reveal">{{ cta_note }}</p>{% endif %}
@@ -133,7 +133,13 @@ SHELL = """<!DOCTYPE html>
   <div class="kicker reveal">Kde nás najdete</div>
   <h2 class="reveal">{{ map_title }}</h2>
   <div class="mapframe reveal">
-    <iframe title="Mapa — {{ company }}" src="{{ maps_embed }}" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <iframe title="Mapa — {{ company }}" src="{{ maps_embed }}" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"
+            onerror="this.style.display='none';document.getElementById('mapfallback').style.display='flex'"></iframe>
+    <div class="mapfb">
+      <div class="mapfb-pin">📍</div>
+      <b>{{ address or city }}</b>
+      <a class="btn" href="{{ maps_link }}" target="_blank" rel="noopener">Otevřít v mapách</a>
+    </div>
   </div>
   <p class="addr reveal">{{ address or city }}{% if city and address and city not in address %}, {{ city }}{% endif %}</p>
 </div></section>
@@ -207,8 +213,11 @@ transition:transform .25s,border-color .25s}
 .ccard span:last-child{color:var(--muted);font-weight:600}
 .cta-note{margin-top:8px;color:var(--muted)}
 .mapframe{border-radius:var(--radius,14px);overflow:hidden;border:1px solid var(--cardline);
-height:340px;box-shadow:var(--mapshadow,0 8px 28px rgba(16,24,40,.08))}
-.mapframe iframe{width:100%;height:100%;border:0}
+height:340px;position:relative;background:var(--soft,#f0f4ec)}
+.mapframe iframe{width:100%;height:100%;border:0;position:absolute;inset:0;z-index:1}
+.mapfb{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;
+align-items:center;justify-content:center;color:var(--muted)}
+.mapfb-pin{font-size:2.2rem}
 .addr{margin-top:14px;color:var(--muted);font-weight:600}
 footer{border-top:1px solid var(--navline);padding:36px 0;margin-top:30px}
 .frow{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;color:var(--muted);font-size:.88rem}

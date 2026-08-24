@@ -52,7 +52,7 @@ tailwind.config = { theme: { extend: {
     <h1 class="text-4xl md:text-6xl font-black leading-[1.05] tracking-tight mb-5 max-w-3xl {{ h1_cls }}">{{ headline }}</h1>
     <p class="text-lg md:text-xl mb-8 max-w-xl {{ p_cls }}">{{ subhead }}</p>
     <div class="flex flex-wrap gap-4">
-      <a href="tel:{{ phone }}" class="bg-brand text-white px-8 py-4 rounded-2xl font-bold hover:scale-105 hover:shadow-2xl hover:shadow-brand/30 transition inline-flex items-center gap-2">📞 {{ cta }}</a>
+      <a href="tel:{{ phone }}" class="bg-brand text-white px-8 py-4 rounded-2xl font-bold hover:scale-105 hover:shadow-2xl hover:shadow-brand/30 transition inline-flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg> {{ cta }}</a>
       <a href="#sluzby" class="px-8 py-4 rounded-2xl font-bold {{ btn2_cls }} transition">Naše služby</a>
     </div>
     {% if stats %}
@@ -127,16 +127,16 @@ tailwind.config = { theme: { extend: {
     <div class="grid sm:grid-cols-3 gap-5 mb-14">
       {% if phone_display != '+420****0000' %}
       <a href="tel:{{ phone }}" class="p-6 rounded-3xl {{ cc_cls }} hover:-translate-y-1 transition block">
-        <div class="text-2xl mb-2">📞</div><b class="block text-xs uppercase tracking-wider mb-1 opacity-60">Telefon</b>
+        <div class="text-2xl mb-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></div><b class="block text-xs uppercase tracking-wider mb-1 opacity-60">Telefon</b>
         <span class="font-bold">{{ phone_display }}</span></a>
       {% endif %}
       {% if email %}
       <a href="mailto:{{ email }}" class="p-6 rounded-3xl {{ cc_cls }} hover:-translate-y-1 transition block">
-        <div class="text-2xl mb-2">✉️</div><b class="block text-xs uppercase tracking-wider mb-1 opacity-60">E-mail</b>
+        <div class="text-2xl mb-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></div><b class="block text-xs uppercase tracking-wider mb-1 opacity-60">E-mail</b>
         <span class="font-bold break-all">{{ email }}</span></a>
       {% endif %}
       <div class="p-6 rounded-3xl {{ cc_cls }}">
-        <div class="text-2xl mb-2">📍</div><b class="block text-xs uppercase tracking-wider mb-1 opacity-60">Sídlo</b>
+        <div class="text-2xl mb-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/></svg></div><b class="block text-xs uppercase tracking-wider mb-1 opacity-60">Sídlo</b>
         <span class="font-bold">{{ address or city or 'Česká republika' }}</span>
       </div>
     </div>

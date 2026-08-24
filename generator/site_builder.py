@@ -190,7 +190,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;
 <header id="top" class="hero"><div class="wrap">
 <span class="badge">{{ hero_label }}</span>
 <h1>{{ headline }}</h1><p>{{ subhead }}</p>
-<a class="btn" href="tel:{{ phone }}">📞 {{ cta }}</a></div></header>
+<a class="btn" href="tel:{{ phone }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg> {{ cta }}</a></div></header>
 <section id="sluzby"><div class="wrap">
 <div class="section-label reveal">Služby</div><h2 class="reveal">Co pro vás uděláme</h2>
 <div class="grid">{% for s in services %}<div class="card reveal">
@@ -263,11 +263,27 @@ def render_site(lead, copy: dict) -> str:
     sk, st, card_text = kickers.get(ind, ("Naše služby", "Co pro vás uděláme",
                                            "Rádi vám poradí a vše zajistíme."))
 
-    # ambient hero decorations per industry
-    ambient = {
-        "tradesman": "🍃", "salon": "✨", "auto": "⚙️",
-        "gastronomy": "🌿", "health": "💚", "sport": "⚡",
-    }.get(ind, "✦")
+    # ambient hero decorations per industry (inline SVG — emoji don't render
+    # in headless browsers and show as empty boxes on screenshots)
+    LEAF_SVG = ('<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">'
+                '<path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75"/></svg>')
+    GEAR_SVG = ('<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+                '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.6 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>')
+    SPARKLE_SVG = ('<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">'
+                   '<path d="M12 0l2.4 7.2L22 9.6l-7.6 2.4L12 19.2l-2.4-7.2L2 9.6l7.6-2.4z"/>'
+                   '<path d="M19 14l1.2 3.6L24 18.8l-3.8 1.2L19 23.6l-1.2-3.6L14 18.8l3.8-1.2z" opacity=".6"/></svg>')
+    HEART_SVG = ('<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">'
+                 '<path d="M12 21s-8-5.5-10-10c-1.5-3.5.5-7 4-7 2.2 0 3.8 1.2 4.5 2.8L12 8l1.5-1.2C14.2 5.2 15.8 4 18 4c3.5 0 5.5 3.5 4 7-2 4.5-10 10-10 10z"/></svg>')
+    BOLT_SVG = ('<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">'
+                '<path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>')
+    ambient_svgs = {
+        "tradesman": [LEAF_SVG, LEAF_SVG, SPARKLE_SVG, LEAF_SVG, SPARKLE_SVG],
+        "salon": [SPARKLE_SVG, SPARKLE_SVG, LEAF_SVG, SPARKLE_SVG, HEART_SVG],
+        "auto": [GEAR_SVG, GEAR_SVG, BOLT_SVG, GEAR_SVG, BOLT_SVG],
+        "gastronomy": [LEAF_SVG, SPARKLE_SVG, LEAF_SVG, SPARKLE_SVG, LEAF_SVG],
+        "health": [HEART_SVG, LEAF_SVG, HEART_SVG, SPARKLE_SVG, LEAF_SVG],
+        "sport": [BOLT_SVG, BOLT_SVG, SPARKLE_SVG, BOLT_SVG, GEAR_SVG],
+    }.get(ind, [SPARKLE_SVG] * 5)
 
     # template CSS with palette substituted
     tpl_css = TEMPLATE_CSS[tpl](p)
@@ -294,7 +310,7 @@ def render_site(lead, copy: dict) -> str:
             f'<span class="badge">{INDUSTRY_THEMES.get(ind, INDUSTRY_THEMES["other"])["hero_label"]}</span>'
             f'<h1>{copy["headline"]}</h1>'
             f'<p>{copy["subhead"]}</p>'
-            f'<a class="btn" href="tel:{phone_raw}">📞 {copy["cta"]}</a>'
+            f'<a class="btn" href="tel:{phone_raw}"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg> {copy["cta"]}</a>'
             '</div>')
         # ensure the photo shows behind: templates style .hero background themselves
         # via {{photo}} placeholder inside their css; replace it now
@@ -305,7 +321,7 @@ def render_site(lead, copy: dict) -> str:
             f'<span class="badge">{INDUSTRY_THEMES.get(ind, INDUSTRY_THEMES["other"])["hero_label"]}</span>'
             f'<h1>{copy["headline"]}</h1>'
             f'<p>{copy["subhead"]}</p>'
-            f'<a class="btn" href="tel:{phone_raw}">📞 {copy["cta"]}</a>'
+            f'<a class="btn" href="tel:{phone_raw}"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg> {copy["cta"]}</a>'
             '</div>')
 
     html_out = Environment().from_string(SHELL).render(
@@ -327,21 +343,24 @@ def render_site(lead, copy: dict) -> str:
         services_kicker=sk,
         services_title=st,
         card_text=card_text,
-        ambient_emoji=ambient,
+        ambient_emoji="",
+        ambient_svg=True,
+        ambient_svgs=ambient_svgs,
         cicon='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>',
         about_kicker="O nás",
         hours="Po–Pá dle domluvy · So–Ne zavřeno",
         cta_note="Nezávazně se ozvěte — rádi vám poradíme a vypočítáme termín.",
         map_title=f"Najdete nás v {lead['city'] or 'Česku'}",
         maps_embed=maps_embed(lead["city"], lead["company_name"]),
+        maps_link=f"https://mapy.cz/zakladni?q={__import__('urllib.parse', fromlist=['quote']).quote(lead['city'] or '')}",
         # rich content
         stats=[("10+", "let zkušeností"), ("100 %", "spokojenost"),
                ("24 h", "reakce na poptávku")],
         gallery=gallery,
         testimonials=[
-            {"icon": "🤝", "text": "Osobní přístup a férová domluva — u nás nejste jen číslo."},
-            {"icon": "⏱️", "text": "Dodržujeme dohodnuté termíny, pracujeme čistě a pořádně."},
-            {"icon": "💬", "text": "Poradíme i s věcmi, na které jste se neptali — bez poplatku."},
+            {"icon": '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75"/></svg>', "text": "Osobní přístup a férová domluva — u nás nejste jen číslo."},
+            {"icon": '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>', "text": "Dodržujeme dohodnuté termíny, pracujeme čistě a pořádně."},
+            {"icon": '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', "text": "Poradíme i s věcmi, na které jste se neptali — bez poplatku."},
         ],
         testi_kicker="Proč k nám",
         testi_title="Naše přednosti",
