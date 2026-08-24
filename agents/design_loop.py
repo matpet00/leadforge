@@ -27,22 +27,40 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 JUDGE_MODEL = os.environ.get("JUDGE_MODEL", "google/gemini-2.5-flash")
+# Free-tier fallback chain for the judge (vision models).
+JUDGE_FALLBACKS = [
+    m for m in os.environ.get("JUDGE_FALLBACKS",
+        "google/gemma-4-31b-it:free,nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free,"
+        "google/gemma-4-26b-a4b-it:free").split(",") if m]
 FIXER_MODEL = os.environ.get("FIXER_MODEL", "openai/gpt-4o-mini")
 TARGET_SCORE = float(os.environ.get("TARGET_SCORE", "8.5"))
 BASE = Path(__file__).resolve().parent.parent
 SHOTS = Path("/root/shots")
 
 
-def _chat(payload: dict) -> str:
+def _chat(payload: dict, timeout: int = 240) -> str:
+    import time
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY not set")
-    req = urllib.request.Request(
-        OPENROUTER_URL, data=json.dumps(payload).encode(), method="POST",
-        headers={"Content-Type": "application/json",
-                 "Authorization": f"Bearer {key}"})
-    with urllib.request.urlopen(req, timeout=240) as r:
-        return json.loads(r.read().decode())["choices"][0]["message"]["content"]
+    last = None
+    for t in range(4):
+        req = urllib.request.Request(
+            OPENROUTER_URL, data=json.dumps(payload).encode(), method="POST",
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {key}"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode())["choices"][0]["message"]["content"]
+        except urllib.error.HTTPError as e:
+            last = e
+            if e.code in (429, 500, 502, 503):
+                wait = 20 * (t + 1)
+                print(f"    [retry {t+1}/4 za {wait}s — HTTP {e.code}]")
+                time.sleep(wait)
+                continue
+            raise
+    raise last
 
 
 def chat_text(model: str, system: str, user: str, max_tokens=4000) -> str:
@@ -105,12 +123,20 @@ def judge_site(html: str, png: Path | None) -> dict:
     content.append({"type": "text",
                     "text": "\n\nHTML ZDROJÁK (zkráceno na CSS + strukturu):\n"
                             + html[:60000]})
-    out = _chat({"model": JUDGE_MODEL, "messages":
-                 [{"role": "user", "content": content}], "max_tokens": 2000})
-    m = re.search(r"\{.*\}", out, re.DOTALL)
-    if not m:
-        raise ValueError(f"Judge returned no JSON: {out[:200]}")
-    return json.loads(m.group(0))
+    payload = {"messages": [{"role": "user", "content": content}],
+               "max_tokens": 2000}
+    errors = []
+    for model in [JUDGE_MODEL] + JUDGE_FALLBACKS:
+        try:
+            out = _chat({**payload, "model": model})
+            m = re.search(r"\{.*\}", out, re.DOTALL)
+            if not m:
+                raise ValueError(f"no JSON: {out[:120]}")
+            return json.loads(m.group(0))
+        except Exception as e:
+            print(f"    judge {model} selhal: {str(e)[:100]}")
+            errors.append(f"{model}: {e}")
+    raise RuntimeError("All judge models failed:\n" + "\n".join(errors))
 
 
 # ------------------------------------------------------------------- fixer
@@ -153,8 +179,17 @@ PŘÍKAZY KE ZPRACOVÁNÍ (aplikuj VŠECHNY):
 Vrať kompletní přepracované HTML."""
     out = chat_text(FIXER_MODEL, FIX_SYSTEM.format(skill=load_skill()), user,
                     max_tokens=6000)  # free tier rejects higher max_tokens (402)
-    return re.sub(r"^```(html)?|```$", "", out.strip(),
-                  flags=re.MULTILINE).strip()
+    out = re.sub(r"^```(html)?\n?|```\n?$", "", out.strip(),
+                 flags=re.MULTILINE).strip()
+    # free models sometimes prepend reasoning/thinking text — keep only HTML
+    m = re.search(r"(<!DOCTYPE|<html)", out, re.IGNORECASE)
+    if not m:
+        raise ValueError(f"fixer returned no HTML ({len(out)} chars): "
+                         + out[:150])
+    if m.start() > 0:
+        print(f"    [fixer: odstraneno {m.start()} znaku reasoning textu]")
+        out = out[m.start():]
+    return out
 
 
 # ------------------------------------------------------------------- loop
@@ -195,7 +230,9 @@ def all_slugs() -> list[str]:
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    loop_val = (sys.argv[sys.argv.index("--loop") + 1]
+                if "--loop" in sys.argv else None)
+    args = [a for a in sys.argv[1:] if not a.startswith("--") and a != loop_val]
     iters = int(sys.argv[sys.argv.index("--loop") + 1]) if "--loop" in sys.argv else 1
     targets = all_slugs() if (not args or args == ["--all"]) else args
     results = [process(s, iters) for s in targets]
