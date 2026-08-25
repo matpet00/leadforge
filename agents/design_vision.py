@@ -218,6 +218,22 @@ TECH POŽADAVKY:
   Google Fonts, Unsplash fotky, three.js CDN.
 - Performance: lazy-loading obrázků, font-display=swap, žádné blokující skripty.
 
+ZAKÁZANÉ POSTUPY (tvrdé pravidlo):
+- ŽÁDNÉ utility CSS frameworky (Tailwind, Bootstrap...) ani jejich třídy
+  (flex, grid, hidden, md:flex, text-xl, mx-auto...). Používej VLASTNÍ
+  sémantické třídy a styly je v <style>. Každá class v HTML musí mít
+  odpovídající CSS definici.
+- HAMBURGAR MENU: pokud existuje button.hamburger-btn, MUSÍ existovat i
+  JS toggle listener a CSS pro .hamburger-line. Otestuj logicky.
+- FOTKY: používej POUZE tyto ověřené Unsplash photo-ID:
+  zahrada: photo-1416879595882-3373a0480b5b, photo-1466692476868-aef1dfb1e735,
+  photo-1523348837708-15d4a09cfac2, photo-1585320806297-9794b3e4eeae
+  auto: photo-1486262715619-67b85e0b08d3, photo-1530046339160-ce3e530c7d2f
+  květiny/interiér: photo-1490750967868-88aa4486c946
+  (URL format: https://images.unsplash.com/<ID>?w=800&q=70&fit=crop)
+  Nikdy si nevymýšlej vlastní photo-ID.
+- ŽÁDNÉ exit()/require() v browser skriptech — early return řeš přes if/else.
+
 ŽELEZNÁ PRAVIDLA OBSAHU:
 - Používej POUZE dodaná firemní data. Nic si nevymýšlej (žádné ceny,
   reference, recenze). Služby odvozené z oboru povoleny.
@@ -284,6 +300,38 @@ Postav kompletní single-page web dle návrhu a technických požadavků."""
 
 # ------------------------------------------------------------------ main
 
+FIX_SYSTEM = """Jsi frontend QA-fix agent. Dostaneš HTML s konkrétními nalezenými
+problémy. Oprav POUZE tyto problémy, nic jiného neměň.
+
+Pravidla:
+- Utility třídy (flex/grid/hidden/text-xl/md:...) → nahraď vlastními
+  sémantickými třídami a definuj je v <style>. NEBO přidej ekvivalentní CSS.
+- Mrtvé obrázky (404) → vyměň za ověřená Unsplash photo-ID nebo odstraň.
+- Chybějící hamburger toggle → doplň JS listener + CSS.
+- exit()/require() v JS → přepiš na if/else guard.
+Vrať POUZE kompletní opravené HTML, žádný komentář."""
+
+
+def _fix_problems(html: str, problems: list[str], name: str,
+                  industry: str) -> str:
+    plist = "\n".join(f"- {p}" for p in problems)
+    from agents.customer_comms import _llm as _comms_llm
+    out = _comms_llm(FIX_SYSTEM, f"""HTML:
+{html[:80000]}
+
+NALEZENÉ PROBLÉMY:
+{plist}
+
+Oprav a vrať kompletní HTML.""", max_tokens=16000) or ""
+    m = re.search(r"(<!DOCTYPE|<html)", out, re.IGNORECASE)
+    if not m or "</html>" not in out.lower():
+        print("  (fix pass vrátil nesmysl — ponechávám původní HTML)")
+        return html
+    return re.sub(r"^```(html)?\n?|```\n?$", "", out.strip(),
+                  flags=re.MULTILINE).strip()[m.start():]
+
+
+
 def lead_facts(slug_or_name: str) -> dict:
     """Pull real company facts from DB by slug or name fragment."""
     try:
@@ -341,7 +389,25 @@ def process(target: str, industry_hint: str = "", name_hint: str = "",
 
     html, build_model = build_site(mockup, name, industry, facts,
                                    spec_path=out_dir / "design_spec.json")
-    (out_dir / "index.html").write_text(html, encoding="utf-8")
+
+    # post-build validation gate
+    from agents.site_validator import validate
+    tmp = out_dir / "index.html"
+    tmp.write_text(html, encoding="utf-8")
+    for attempt in range(2):
+        probs = validate(tmp)
+        if not probs:
+            print("  ✓ validator: VŠE OK")
+            break
+        print(f"  ⚠ validator našel {len(probs)} problémů:")
+        for x in probs:
+            print("   -", x[:120])
+        if attempt == 0:
+            print("  → fix pass přes problémy...")
+            html = _fix_problems(html, probs, name, industry)
+            tmp.write_text(html, encoding="utf-8")
+        else:
+            print("  ✗ i po fixu problémy — ukládám tak, ale hlásím")
 
     meta = {"slug": slug, "mockup_model": img_model,
             "build_model": build_model, "tech_hero": tech,
