@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Udržitelná zahradní oáza s přírodní elegancí a moderním přístupem - zahradní služby Návrh, Instalace, Údržba">
+    <title>Zahradní oáza - Návrh a údrž zahrad</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
+
+    <meta property="og:title" content="Zahradní oáza">
+    <meta property="og:description" content="Udržitelná zahradní oáza s přírodní elegancí a moderním přístupem">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=70&fit=crop">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zahrada.example.com">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Zahradní oáza s.r.o.",
+        "description": "Udržitelná zahradní oáza s přírodní elegancí a moderním přístupem",
+        "logo": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=70&fit=crop"
+    }
+    </script>
+
+    <style>
+        :root {
+            --color-primary: #2E7D32;
+            --color-secondary: #6D4C41;
+            --color-accent: #FFB300;
+            --color-bg: #F9F9F7;
+            --color-text: #263238;
+            --color-card: #F0F9F0;
+            --color-border: #e0e0e0;
+            --font-heading: 'Montserrat', sans-serif;
+            --font-body: 'Open Sans', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--color-text);
+            background: var(--color-bg);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            loading="lazy";
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* Focus styles for accessibility */
+        a:focus, button:focus {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0ms !important;
+                animation-duration: 0ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+        h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); }
+        h3 { font-size: clamp(1.5rem, 3vw, 2rem); }
+
+        p { margin-bottom: 1rem; }
+
+        /* Button */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+            border: 2px solid var(--color-accent);
+            background: transparent;
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: var(--color-accent);
+            color: var(--color-bg);
+            transform: translateY(-2px);
+        }
+
+        .btn:focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        /* Hamburger menu */
+        .hamburger-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 100;
+        }
+
+        .hamburger-line {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: var(--color-primary);
+            margin: 5px 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 60%;
+            max-width: 360px;
+            background: var(--color-bg);
+            padding-top: 80px;
+            transform: translateX(100%);
+            transition: transform 0.4s ease;
+            z-index: 99;
+        }
+
+        .mobile-nav.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav a {
+            display: block;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 1.25rem;
+        }
+
+        /* Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(249, 249, 247, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
+
+        .logo {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            letter-spacing: -1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--color-text);
+            position: relative;
+            padding-bottom: 4px;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 20px;
+            background: url('https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1600&q=70&fit=crop') center/cover no-repeat;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger-btn { display: block; }
+            .nav-links { display: none; }
+        }
+        @media (min-width: 769px) {
+            .mobile-nav { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+                <div class="header-inner">
+                    <a href="#" class="logo">Zahradní oáza</a>
+                    <nav class="nav-links">
+                        <a href="#home" class="nav-link">Domů</a>
+                        <a href="#about" class="nav-link">O nás</a>
+                        <a href="#services" class="nav-link">Služby</a>
+                        <a href="#portfolio" class="nav-link">Portfolio</a>
+                        <a href="#process" class="nav-link">Proces</a>
+                        <a href="#references" class="nav-link">Reference</a>
+                        <a href="#contact" class="nav-link">Kontakt</a>
+                    </nav>
+                    <button class="hamburger-btn" aria-label="Menu">
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                    </button>
+                </div>
+            </div>
+            <nav class="mobile-nav">
+                <a href="#home">Domů</a>
+                <a href="#about">O nás</a>
+                <a href="#services">Služby</a>
+                <a href="#portfolio">Portfolio</a>
+                <a href="#process">Proces</a>
+                <a href="#references">Reference</a>
+                <a href="#contact">Kontakt</a>
+            </nav>
+        </header>
+
+        <main>
+            <section id="home" class="hero">
+                <h1 class="hero-headline">Vytvoříme vaši zahradní oázu</h1>
+                <a href="#contact" class="btn hero-cta">Kontaktujte nás</a>
+            </section>
+
+            <section id="about" class="about">
+                <div class="container">
+                    <div class="about-image">
+                        <img src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=70&fit=crop" alt="Zelená zahrada">
+                    </div>
+                    <div class="about-content">
+                        <h2>O nás</h2>
+                        <p>Jsme tým zahradních designérů a realizátorů, kteří věří v udržitelnost, přírodní eleganci a moderní přístup. Vytváříme zahrady, které nejen vypadají úžasně, ale i vydrží.</p>
+                        <p>Naše služby zahrnují návrh, instalaci a údržbu zahrad na klíč, vždy s ohledem na místní klima a potřeby klienta.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="services" class="services">
+                <div class="container">
+                    <h2 class="section-title">Naše služby</h2>
+                    <p class="section-subtitle">Kompletní zahradní péče od návrhu po realizaci.</p>
+                    <div class="services-grid">
+                        <div class="service-card">
+                            <h3>Návrh zahrad</h3>
+                            <p>Kreativní návrhy zahrad respektující přírodu a vaše přání.</p>
+                        </div>
+                        <div class="service-card">
+                            <h3>Instalace</h3>
+                            <p>Profesionální instalace rostlin, osvětlení a doplňků.</p>
+                        </div>
+                        <div class="service-card">
+                            <h3>Údržba</h3>
+                            <p>Pravidelná péče pro udržení krásy vaší zahrady po celý rok.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="portfolio" class="portfolio">
+                <div class="container">
+                    <h2 class="section-title">Naše portfolio</h2>
+                    <p class="section-subtitle">Ukázka vybraných zahrad, které jsme vytvořili.</p>
+                    <div class="portfolio-filters">
+                        <button class="portfolio-filter active" data-filter="all">Všechny</button>
+                        <button class="portfolio-filter" data-filter="residential">Rezidenční</button>
+                        <button class="portfolio-filter" data-filter="commercial">Komerční</button>
+                    </div>
+                    <div class="portfolio-grid">
+                        <div class="portfolio-item" data-category="residential">
+                            <img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&q=70&fit=crop" alt="Rezidenční zahrada">
+                            <div class="caption">Soukromá zahrada</div>
+                        </div>
+                        <div class="portfolio-item" data-category="commercial">
+                            <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&q=70&fit=crop" alt="Komerční zahrada">
+                            <div class="caption">Firemní park</div>
+                        </div>
+                        <div class="portfolio-item" data-category="residential">
+                            <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=70&fit=crop" alt="Zahrada s bazénem">
+                            <div class="caption">Zahrada s bazénem</div>
+                        </div>
+                        <div class="portfolio-item" data-category="commercial">
+                            <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=70&fit=crop" alt="Hotelová zahrada">
+                            <div class="caption">Hotelový resort</div>
+                        </div>
+                        <div class="portfolio-item" data-category="residential">
+                            <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=70&fit=crop" alt="Minimalistická zahrada">
+                            <div class="caption">Minimalistická zahrada</div>
+                        </div>
+                        <div class="portfolio-item" data-category="commercial">
+                            <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&q=70&fit=crop" alt="Office garden">
+                            <div class="caption">Kancelářská zahrada</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="process" class="process">
+                <div class="container">
+                    <h2 class="section-title">Náš proces</h2>
+                    <p class="section-subtitle">Jak pracujeme, abychom vytvořili dokonalou zahradu.</p>
+                    <div class="process-steps">
+                        <div class="process-step">
+                            <div class="process-step-number">1</div>
+                            <div class="process-step-content">
+                                <h4>Konzultace</h4>
+                                <p>Poslechneme si vaše přání, provedeme analýzu místa a navrhneme koncept.</p>
+                            </div>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-number">2</div>
+                            <div class="process-step-content">
+                                <h4>Návrh</h4>
+                                <p>Vytvoříme detailní plán výsadby, osvětlení a cest.</p>
+                            </div>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-number">3</div>
+                            <div class="process-step-content">
+                                <h4>Realizace</h4>
+                                <p>Zrealizujeme zahradu podle návrhu včetně instalace rostlin a doplňků.</p>
+                            </div>
+                        </div>
+                        <div class="process-step">
+                            <div class="process-step-number">4</div>
+                            <div class="process-step-content">
+                                <h4>Údržba</h4>
+                                <p>Poskytneme pravidelnou péči a poradenství pro dlouhodobé zdraví zahrady.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="references" class="references">
+                <div class="container">
+                    <h2 class="section-title">Reference</h2>
+                    <p class="section-subtitle">Co říkají naši klienti.</p>
+                    <div class="references-grid">
+                        <div class="reference-card">
+                            <p>"Profesionální přístup, krásná zahrada, přesně podle našich představ."</p>
+                            <div class="client"> – Novákovi, Praha</div>
+                        </div>
+                        <div class="reference-card">
+                            <p>"Rychlá komunikace a kvalitní práce. Zahrada je náš nový domov."</p>
+                            <div class="client"> – Svobodovi, Brno</div>
+                        </div>
+                        <div class="reference-card">
+                            <p>"Skvělý servis, údržba probíhá bez problémů."</p>
+                            <div class="client"> – Dostálová, Ostrava</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contact" class="contact">
+                <div class="container">
+                    <h2 class="section-title">Kontakt</h2>
+                    <p class="section-subtitle">Napište nám a domluvte si schůzku.</p>
+                    <div class="contact-form">
+                        <h3>Pošlete nám zprávu</h3>
+                        <form>
+                            <div class="form-group">
+                                <label for="name">Jméno a příjmení</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Zpráva</label>
+                                <textarea id="message" name="message" required></textarea>
+                            </div>
+                            <button type="submit" class="btn">Odeslat</button>
+                        </form>
+                    </div>
+                    <div class="contact-info">
+                        <div><span class="label">Telefon:</span> <span class="value">+420 123 456 789</span></div>
+                        <div><span class="label">E-mail:</span> <span class="value">info@zahradnioaza.cz</span></div>
+                        <div><span class="label">Adresa:</span> <span class="value">Na Výsluní 123, Praha 10</span></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <a href="#" class="logo">Zahradní oáza</a>
+                <div class="quick-links">
+                    <a href="#about">O nás</a>
+                    <a href="#services">Služby</a>
+                    <a href="#portfolio">Portfolio</a>
+                    <a href="#process">Proces</a>
+                    <a href="#references">Reference</a>
+                    <a href="#contact">Kontakt</a>
+                </div>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook">FB</a>
+                    <a href="#" aria-label="Instagram">IG</a>
+                    <a href="#" aria-label="LinkedIn">LI</a>
+                </div>
+                <p>© 2023 Zahradní oáza s.r.o. Všechna práva vyhrazena.</p>
+            </div>
+        </footer>
+
+        <script>
+            // Hamburger menu toggle
+            const hamburgerBtn = document.querySelector('.hamburger-btn');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            hamburgerBtn.addEventListener('click', () => {
+                hamburgerBtn.classList.toggle('active');
+                mobileNav.classList.toggle('open');
+            });
+
+            // Close mobile nav when a link is clicked
+            mobileNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    hamburgerBtn.classList.remove('active');
+                    mobileNav.classList.remove('open');
+                });
+            });
+        </script>
+    </body>
+</html>
